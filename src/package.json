@@ -21,7 +21,7 @@
     "test": "node index.js"
   },
   "dependencies": {
-    "minecraft-protocol": "^1.57.0",
-    "prismarine-proxy": "^1.1.4"
+    "colors": "^1.4.0",
+    "minecraft-protocol": "^1.57.0"
   }
 }
