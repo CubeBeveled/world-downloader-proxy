@@ -1,0 +1,27 @@
+{
+  "name": "world-downloader-proxy",
+  "version": "0.0.1",
+  "description": "A proxy that downloads loaded chunks",
+  "keywords": [
+    "proxy"
+  ],
+  "homepage": "https://github.com/CubeBeveled/world-downloader-proxy#readme",
+  "bugs": {
+    "url": "https://github.com/CubeBeveled/world-downloader-proxy/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CubeBeveled/world-downloader-proxy.git"
+  },
+  "license": "ISC",
+  "author": "Beveled Cube",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "dependencies": {
+    "minecraft-protocol": "^1.57.0",
+    "prismarine-proxy": "^1.1.4"
+  }
+}
