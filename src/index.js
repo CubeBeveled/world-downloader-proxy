@@ -82,7 +82,8 @@ async function main() {
     server.on("packet", (data, meta) => {
       if (client.state !== protocol.states.PLAY || meta.state != protocol.states.PLAY || client.ended) return;
 
-      //if (meta.name != "teams" && meta.name != "map_chunk" && meta.name != "window_items" && meta.name != "declare_commands" && meta.name != "playerlist_header" && !meta.name.includes("entity")) console.log(meta.name, data);
+      //const dontlog = new Set(["teams", "bundle_delimiter", "map_chunk", "window_items", "declare_commands", "playerlist_header", "update_time", "player_remove"]);
+      //if (!dontlog.has(meta.name) && !meta.name.includes("entity")) console.log(meta.name, data);
 
       client.write(meta.name, data);
 
@@ -114,10 +115,6 @@ async function main() {
         }
       }
 
-      if (meta.name == "map_chunk" && saveChunks && data.chunkData) {
-        fs.writeFileSync(`${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`, compress(data.chunkData))
-      }
-
       if (meta.name == "kick_disconnect") {
         intendedToLeave = true;
         console.log(`${color.red("[-]")} ${client.username} got kicked`);
@@ -126,6 +123,10 @@ async function main() {
       if (meta.name == "disconnect") {
         intendedToLeave = true;
         console.log(`${color.red("[-]")} ${client.username} disconnected`);
+      }
+
+      if (meta.name == "map_chunk" && saveChunks && data.chunkData) {
+        fs.writeFileSync(`${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`, compress(data.chunkData))
       }
     });
 

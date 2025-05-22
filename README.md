@@ -2,9 +2,38 @@
 *proxy edition*
 
 ## Packet Discoveries
+### block_change
+```json
+{ location: { x: 94, z: 93, y: 113 }, type: 2354 }
+```
+
+### acknowledge_player_digging
+```json
+{ sequenceId: 0 }
+```
+
+### collect
+```json
+{
+  collectedEntityId: 9786751,
+  collectorEntityId: 9782778,
+  pickupItemCount: 1
+}
+```
+
+### set_slot
+```json
+{
+  windowId: 0,
+  stateId: 4,
+  slot: 43,
+  item: { present: true, itemId: 657, itemCount: 41, nbtData: undefined }
+}
+```
+
 ### system_chat
 System (server) chat messages
-```js
+```json
 {
   content: '{"translate":"sleep.players_sleeping","with":["1","133"]}',
   isActionBar: true
