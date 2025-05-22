@@ -2,6 +2,15 @@
 *proxy edition*
 
 ## Packet Discoveries
+### system_chat
+System (server) chat messages
+```js
+{
+  content: '{"translate":"sleep.players_sleeping","with":["1","133"]}',
+  isActionBar: true
+}
+```
+
 ### declare_commands
 used to send chunk data
 
@@ -90,3 +99,5 @@ Detection/Debug code
 ```js
 if (meta.name == "declare_commands") data.nodes.forEach(console.log)
 ```
+
+[useful project](https://github.com/MineProxy/mineproxy/blob/master/lib/Proxy.js)
