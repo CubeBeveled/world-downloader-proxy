@@ -9,7 +9,7 @@ const proxyPort = 25566;
 
 const cracked = true;
 const keepAlive = false;
-const version = "1.20";
+const version = "1.20"; // Don't use 1.20.5 or later (transfer packets = gay)
 const proxyMotd = `${targetServer}${targetPort == 25565 ? "" : `:${targetPort}`} [ PROXIED ]`
 
 const worldSaveDir = "world"
