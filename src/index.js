@@ -79,7 +79,7 @@ async function main() {
     server.on("error", (err) => close(err))
 
     // upstream -> client
-    server.on("packet", async (data, meta) => {
+    server.on("packet", (data, meta) => {
       //if (meta.name != "teams" && meta.name != "playerlist_header" && !meta.name.includes("entity")) console.log(meta.name, data);
       if (client.state !== protocol.states.PLAY || meta.state != protocol.states.PLAY || client.ended) return;
 
@@ -109,7 +109,7 @@ async function main() {
       }
 
       if (meta.name == "map_chunk" && saveChunks && data.chunkData) {
-        fs.writeFileSync(`${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`, await compress(data.chunkData))
+        fs.writeFileSync(`${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`, compress(data.chunkData))
       }
 
       if (meta.name == "kick_disconnect") {
@@ -137,14 +137,7 @@ async function getServerInfo(ip, port) {
 }
 
 function compress(buffer) {
-  return new Promise((resolve, reject) => {
-    zlib.gzip(buffer, (err, compressedBuffer) => {
-      if (err) {
-        console.error("Compression error:", err);
-        reject()
-      } else { resolve(compressedBuffer) }
-    });
-  });
+  return zlib.gzipSync(buffer);
 }
 
 function toPlainText(json) {
