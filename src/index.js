@@ -81,8 +81,6 @@ async function main() {
     // upstream -> client
     server.on("packet", async (data, meta) => {
       //if (meta.name != "teams" && meta.name != "playerlist_header" && !meta.name.includes("entity")) console.log(meta.name, data);
-      if (meta.name.includes("chat")) console.log(meta.name, data);
-
       if (client.state !== protocol.states.PLAY || meta.state != protocol.states.PLAY || client.ended) return;
 
       client.write(meta.name, data);
