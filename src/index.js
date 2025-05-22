@@ -80,18 +80,24 @@ async function main() {
 
     // upstream -> client
     server.on("packet", (data, meta) => {
-      //if (meta.name != "teams" && meta.name != "playerlist_header" && !meta.name.includes("entity")) console.log(meta.name, data);
       if (client.state !== protocol.states.PLAY || meta.state != protocol.states.PLAY || client.ended) return;
+
+      //if (meta.name != "teams" && meta.name != "map_chunk" && meta.name != "window_items" && meta.name != "declare_commands" && meta.name != "playerlist_header" && !meta.name.includes("entity")) console.log(meta.name, data);
 
       client.write(meta.name, data);
 
       if (meta.name === "compress" || meta.name == "set_compression") client.compressionThreshold = data.threshold;
 
-      if (meta.name == "login") {
-        if (data.worldState?.name) {
-          currentDimension = data.worldState.name.replace("minecraft:", "")
-        } else if (data.worldType) {
-          currentDimension = data.worldType
+      if (meta.name == "login" || meta.name == "respawn") {
+        if (meta.name == "login") {
+          if (data.worldState?.name) {
+            currentDimension = data.worldState.name.replace("minecraft:", "")
+          } else if (data.worldType) {
+            currentDimension = data.worldType
+          }
+        } else if (meta.name == "respawn") {
+          if (data.dimension) currentDimension = data.dimension
+          else if (data.worldName) currentDimension = data.worldName.replace("minecraft:", "")
         }
 
         if (!fs.existsSync(`${worldSaveDir}/${currentDimension}`)) {
