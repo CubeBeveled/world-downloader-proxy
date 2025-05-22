@@ -11,7 +11,7 @@ System (server) chat messages
 }
 ```
 
-### declare_commands
+### map_chunk
 used to send chunk data
 
 ```json
