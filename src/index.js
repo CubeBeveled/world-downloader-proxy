@@ -1,7 +1,7 @@
 const protocol = require("minecraft-protocol");
 const color = require("colors");
-const fs = require("fs");
 const zlib = require("zlib");
+const fs = require("fs");
 
 const targetServer = "play.6b6t.org";
 const targetPort = 25565;
