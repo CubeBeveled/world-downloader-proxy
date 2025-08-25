@@ -1,5 +1,6 @@
 # World downloader
 *proxy edition*
+People can join and it saves the chunks they load
 
 ## Packet Discoveries
 ### block_change

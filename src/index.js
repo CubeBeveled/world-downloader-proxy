@@ -167,7 +167,7 @@ async function main() {
           x: data.x * 16,
           z: data.z * 16,
         };
-        const chunkPath = `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`;
+        const chunkPath = `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}_${client.username}.bin`;
 
         if (useSaveBounds && !isPosInBounds(saveBoundA, saveBoundB, chunkPos))
           return;
