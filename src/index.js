@@ -10,17 +10,25 @@ const proxyPort = 25566;
 const cracked = true;
 const keepAlive = false;
 const version = "1.20"; // Don't use 1.20.5 or later (transfer packets = gay)
-const proxyMotd = `${targetServer}${targetPort == 25565 ? "" : `:${targetPort}`} [ PROXIED ]`
+const fetchServerInfo = false;
+const proxyMotd = `${targetServer}${
+  targetPort == 25565 ? "" : `:${targetPort}`
+} [ PROXIED ]`;
 
-const worldSaveDir = "world"
+const worldSaveDir = "world";
+const useSaveBounds = true;
+const saveBoundA = { x: 130000, z: 130000 };
+const saveBoundB = { x: -130000, z: -130000 };
 
 main();
 async function main() {
   if (!fs.existsSync(`${worldSaveDir}`)) {
-    fs.mkdirSync(`${worldSaveDir}`)
+    fs.mkdirSync(`${worldSaveDir}`);
   }
 
-  const serverInfo = await getServerInfo(targetServer, targetPort);
+  const serverInfo = fetchServerInfo
+    ? await getServerInfo(targetServer, targetPort)
+    : undefined;
 
   const sleep = (ms) => {
     return new Promise((r) => {
@@ -33,16 +41,24 @@ async function main() {
     version: version,
     "online-mode": !cracked,
     motd: proxyMotd,
-    maxPlayers: serverInfo.players.max,
-    keepAlive
+    maxPlayers: serverInfo?.players.max | 100,
+    keepAlive,
   });
 
-  proxy.on("listening", () => console.log(color.green(`Proxy listening on port ${proxyPort}`)))
+  proxy.on("listening", () =>
+    console.log(
+      color.green(`Proxy listening on port ${proxyPort} (${version})`)
+    )
+  );
 
   proxy.on("login", (client) => {
-    console.log(`${color.green("[+]")} [${client.version}-${client.protocolVersion}] ${client.username} joined`)
+    console.log(
+      `${color.green("[+]")} [${client.version}-${client.protocolVersion}] ${
+        client.username
+      } joined`
+    );
 
-    const server = protocol.createClient({
+    let server = protocol.createClient({
       username: client.username,
       host: targetServer,
       port: targetPort,
@@ -64,45 +80,58 @@ async function main() {
 
       if (reason instanceof Error) {
         reason = "Disconnected";
-        console.log(color.yellow(`Error:`), reason)
+        console.log(color.yellow(`Error:`), reason);
       }
 
-      if (log) console.log(`${color.red("[-]")} ${client.username} disconnected (${reason})`);
+      if (log)
+        console.log(
+          `${color.red("[-]")} ${client.username} disconnected (${reason})`
+        );
 
       if (!client.ended && !intendedToLeave) client.end(reason);
+      if (!server.ended) server.end();
     }
 
-    client.on("end", (reason) => close(reason, false))
-    client.on("error", (err) => close(err))
+    client.on("end", (reason) => close(reason, false));
+    client.on("error", (err) => close(err));
 
-    server.on("end", (reason) => close(`Upstream ended: ${reason}`, !intendedToLeave))
-    server.on("error", (err) => close(err))
+    server.on("end", (reason) =>
+      close(`Upstream ended: ${reason}`, !intendedToLeave)
+    );
+    server.on("error", (err) => close(err));
 
     // upstream -> client
     server.on("packet", (data, meta) => {
-      if (client.state !== protocol.states.PLAY || meta.state != protocol.states.PLAY || client.ended) return;
+      if (
+        client.state !== protocol.states.PLAY ||
+        meta.state != protocol.states.PLAY ||
+        client.ended
+      )
+        return;
 
       //const dontlog = new Set(["teams", "bundle_delimiter", "map_chunk", "window_items", "declare_commands", "playerlist_header", "update_time", "player_remove"]);
       //if (!dontlog.has(meta.name) && !meta.name.includes("entity")) console.log(meta.name, data);
 
       client.write(meta.name, data);
 
-      if (meta.name === "compress" || meta.name == "set_compression") client.compressionThreshold = data.threshold;
+      if (meta.name === "compress" || meta.name == "set_compression")
+        client.compressionThreshold = data.threshold;
 
       if (meta.name == "login" || meta.name == "respawn") {
         if (meta.name == "login") {
           if (data.worldState?.name) {
-            currentDimension = data.worldState.name.replace("minecraft:", "")
+            currentDimension = data.worldState.name.replace("minecraft:", "");
           } else if (data.worldType) {
-            currentDimension = data.worldType
+            currentDimension = data.worldType;
           }
         } else if (meta.name == "respawn") {
-          if (data.dimension) currentDimension = data.dimension
-          else if (data.worldName) currentDimension = data.worldName.replace("minecraft:", "")
+          if (data.dimension) currentDimension = data.dimension;
+          else if (data.worldName)
+            currentDimension = data.worldName.replace("minecraft:", "");
         }
 
         if (!fs.existsSync(`${worldSaveDir}/${currentDimension}`)) {
-          fs.mkdirSync(`${worldSaveDir}/${currentDimension}`)
+          fs.mkdirSync(`${worldSaveDir}/${currentDimension}`);
         }
       }
 
@@ -111,7 +140,7 @@ async function main() {
 
         if (msg.includes("Welcome to 6b6t.org, ")) {
           saveChunks = true;
-          console.log(prefix(color.green("Started saving chunks")))
+          console.log(prefix(color.green("Started saving chunks")));
         }
       }
 
@@ -126,13 +155,29 @@ async function main() {
       }
 
       if (meta.name == "map_chunk" && saveChunks && data.chunkData) {
-        fs.writeFileSync(`${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`, compress(data.chunkData))
+        const chunkPos = {
+          x: data.x * 16,
+          z: data.z * 16,
+        };
+
+        if (useSaveBounds && !isPosInBounds(saveBoundA, saveBoundB, chunkPos))
+          return;
+
+        fs.writeFileSync(
+          `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`,
+          compress(data.chunkData)
+        );
       }
     });
 
     // client  ->  upstream
     client.on("packet", (data, meta) => {
-      if (server.state != protocol.states.PLAY || meta.state != protocol.states.PLAY || server.ended) return;
+      if (
+        server.state != protocol.states.PLAY ||
+        meta.state != protocol.states.PLAY ||
+        server.ended
+      )
+        return;
 
       server.write(meta.name, data);
     });
@@ -159,4 +204,17 @@ function toPlainText(json) {
   }
 
   return result;
+}
+
+function isPosInBounds(bpos1, bpos2, pos) {
+  const { x: x1, z: z1 } = bpos1;
+  const { x: x2, z: z2 } = bpos2;
+  const { x: px, z: pz } = pos;
+
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const minZ = Math.min(z1, z2);
+  const maxZ = Math.max(z1, z2);
+
+  return px >= minX && px <= maxX && pz >= minZ && pz <= maxZ;
 }
