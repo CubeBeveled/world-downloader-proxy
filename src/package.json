@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "colors": "^1.4.0",
+    "express": "^5.1.0",
     "minecraft-protocol": "^1.61.0"
   }
 }

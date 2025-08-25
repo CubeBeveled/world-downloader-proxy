@@ -6,6 +6,7 @@ const fs = require("fs");
 const targetServer = "play.6b6t.org";
 const targetPort = 25565;
 const proxyPort = 25566;
+const webPort = 3000;
 
 const cracked = true;
 const keepAlive = false;
@@ -22,6 +23,7 @@ const saveBoundA = { x: 130000, z: 130000 };
 const saveBoundB = { x: -130000, z: -130000 };
 
 main();
+webserver();
 async function main() {
   if (!fs.existsSync(`${worldSaveDir}`)) {
     fs.mkdirSync(`${worldSaveDir}`);
@@ -167,7 +169,7 @@ async function main() {
           x: data.x * 16,
           z: data.z * 16,
         };
-        const chunkPath = `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}_${client.username}.bin`;
+        const chunkPath = `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}_${client.username.replace("_", "-")}.bin`;
 
         if (useSaveBounds && !isPosInBounds(saveBoundA, saveBoundB, chunkPos))
           return;
@@ -189,6 +191,31 @@ async function main() {
       server.write(meta.name, data);
     });
   });
+}
+
+function webserver() {
+  const express = require("express");
+  const app = express();
+
+  app.use("/chunk", express.static(worldSaveDir));
+
+  app.get("/chunks", (req, res) => {
+    let dimensions = {};
+
+    for (const dim of fs.readdirSync(worldSaveDir)) {
+      dimensions[dim] = [];
+      const chunkFiles = fs.readdirSync(`${worldSaveDir}/${dim}`);
+
+      for (const chunk of chunkFiles) {
+        const metadata = chunk.split("_");
+        dimensions[dim].push({ x: metadata[0], z: metadata[1], author: metadata[2], filename: chunk });
+      }
+    }
+
+    res.json(dimensions);
+  });
+
+  app.listen(webPort, () => console.log(`Listening on port ${webPort}`));
 }
 
 async function getServerInfo(ip, port) {
