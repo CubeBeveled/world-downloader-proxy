@@ -17,6 +17,7 @@ const proxyMotd = `${targetServer}${
 
 const worldSaveDir = "world";
 const useSaveBounds = true;
+const asyncSaving = true;
 const saveBoundA = { x: 130000, z: 130000 };
 const saveBoundB = { x: -130000, z: -130000 };
 
@@ -142,6 +143,13 @@ async function main() {
           saveChunks = true;
           console.log(prefix(color.green("Started saving chunks")));
         }
+
+        if (
+          msg.startsWith("The target server is offline now!") ||
+          msg == "6b6t.org is full"
+        ) {
+          saveChunks = false;
+        }
       }
 
       if (meta.name == "kick_disconnect") {
@@ -159,14 +167,13 @@ async function main() {
           x: data.x * 16,
           z: data.z * 16,
         };
+        const chunkPath = `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`;
 
         if (useSaveBounds && !isPosInBounds(saveBoundA, saveBoundB, chunkPos))
           return;
 
-        fs.writeFileSync(
-          `${worldSaveDir}/${currentDimension}/${data.x}_${data.z}.bin`,
-          compress(data.chunkData)
-        );
+        if (asyncSaving) fs.writeFile(chunkPath, compress(data.chunkData));
+        else fs.writeFileSync(chunkPath), compress(data.chunkData);
       }
     });
 
