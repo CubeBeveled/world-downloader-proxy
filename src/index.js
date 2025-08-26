@@ -101,7 +101,7 @@ async function main() {
     server.on("end", (reason) =>
       close(`Upstream ended: ${reason}`, !intendedToLeave)
     );
-    server.on("error", (err) => close(err));
+    server.on("error", (err) => close(`Upstream error: ${err}`));
 
     // upstream -> client
     server.on("packet", (data, meta) => {
